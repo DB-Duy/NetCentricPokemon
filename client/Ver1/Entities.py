@@ -3,7 +3,7 @@ from settings import *
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, game, x, y, type='m'):
+    def __init__(self, game, x, y,id, type='m'):
         """Creates and inserts player into game
 
         Args:
@@ -11,7 +11,9 @@ class Player(pg.sprite.Sprite):
             x (int): x position
             y (int): y position
             type (str, optional): Sprite type, 'm' is male 'f' is female. Defaults to 'm'.
+            id: playerID
         """
+        self.id = id
         self.groups = [game.all_sprites, game.players]
         super().__init__(self.groups)
         self.game = game

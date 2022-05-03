@@ -1,10 +1,13 @@
+
 import random
 import pygame as pg
 import sys
+import pickle
 from os import path, sep
 from settings import *
 from Entities import *
 from Map import *
+from network import Network
 
 class Game:
     def __init__(self):
@@ -13,10 +16,12 @@ class Game:
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
         pg.key.set_repeat(500, 100)
+        self.network = None
         self.load_data()
 
     def load_data(self):
         game_folder = path.dirname(__file__)
+        self.network = Network()
         self.map = Map()
         img_folder = path.join(game_folder+sep,"sprites")
         self.MALE_SPRITE_SHEET = pg.image.load(path.join(img_folder+sep,"PlayerSprites"+sep,PLAYER_MALE_SPRITE)).convert_alpha()
@@ -51,9 +56,9 @@ class Game:
             x (int, optional): Spawn coordiate x. Defaults to -1.
             y (int, optional): Spawn coordinate y. Defaults to -1.
         """
-        self.player = Player(self, 0, 0,'f')
+        self.player = Player(self, 0, 0,self.network.id,'f')
         while self.player.collides(x,y) or (x==-1 and y==-1):
-          (x,y) = (random.randrange(1,MAP_WIDTH-1),random.randrange(1,MAP_HEIGHT-1))
+            (x,y) = (random.randrange(1,MAP_WIDTH-1),random.randrange(1,MAP_HEIGHT-1))
         self.player.x = x
         self.player.y = y
         print(f"Player spawned at: {(x,y)}")
@@ -75,6 +80,19 @@ class Game:
         # update portion of the game loop
         self.all_sprites.update()
         self.camera.update(self.player)
+        self.pollServer()
+        
+    def pollServer(self):
+        serverRes = self.network.sendPlayerState(self.player)
+        if serverRes:
+            serverRes = pickle.loads(serverRes)
+            for player in self.players:
+                for id, pos in serverRes.items():
+                    if player.id == id:
+                        player.x = pos[0]
+                        player.y = pos[1]
+                    else:
+                        Player(self,pos[0],pos[1],id)
         
     def draw_grid(self):
         for x in range(0, LEFTWIDTH, TILESIZE):
