@@ -1,0 +1,36 @@
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+DARKGREY = (40, 40, 40)
+LIGHTGREY = (100, 100, 100)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+
+# game settings
+TILESIZE = 64
+PLAYER_FRAMES_PER_STEP = 3
+WIDTH = TILESIZE*24   # 16 * 64 or 32 * 32 or 64 * 16
+HEIGHT = TILESIZE*12  # 16 * 48 or 32 * 24 or 64 * 12
+LEFTWIDTH = int((WIDTH/TILESIZE)*(2/3))*TILESIZE
+RIGHTWIDTH = WIDTH-LEFTWIDTH
+
+FPS = 48
+TITLE = "Pokegame"
+BGCOLOR = DARKGREY
+
+GRIDWIDTH = WIDTH / TILESIZE
+GRIDHEIGHT = HEIGHT / TILESIZE
+
+# paths
+PLAYER_MALE_SPRITE = "playerMale.png"
+PLAYER_FEMALE_SPRITE = "playerFemale.png"
+TILESET = "cropped.png"
+
+# map encoding
+MAP_WIDTH = 40
+MAP_HEIGHT = 40
+WALL = "1"
+EMPTYCELL = "."
+
+# other miscelaneous globals
+IMG_SCALE = 1
