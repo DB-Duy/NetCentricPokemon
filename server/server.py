@@ -2,7 +2,7 @@ import socket
 import _thread
 import pickle
 
-server = "192.168.100.2"
+server = "172.25.35.107"
 port = 5555
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 Players = {}
