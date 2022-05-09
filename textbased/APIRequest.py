@@ -1,6 +1,6 @@
 import requests
 import json
-from pokemon import *
+import pokemon
 
 class PokemonGetter:
   def __init__(self):
@@ -9,18 +9,18 @@ class PokemonGetter:
     self.SpeciesURL = "https://pokeapi.co/api/v2/pokemon-species/"
     self.TypeURL = "https://pokeapi.co/api/v2/type/"
 
-  def getPokemon(self, pokemonName: str):
+  def getPokemon(self, pokemonName: str, lvl: int =1, EV:int = 0.5):
     """Returns a pokemon object
 
     Args:
-        pokemonName (str): the  name of the Pokemon, not case sensitive
+        pokemonName (str): the name of the Pokemon, not case sensitive
+        lvl (int): level of the pokemon
     """
     pokemonInfo = self.getPokemonInfo(pokemonName)
-    types = []
     if pokemonInfo is None:
       return pokemonInfo
-    return Pokemon(pokemonInfo)
-    
+    pkm = pokemon.Pokemon(pokemonInfo, lvl, EV)
+    return pkm
     
   def getPokemonInfo(self, pokemonName: str):
     """Requests API for pokemon and returns dict
@@ -52,7 +52,7 @@ class PokemonGetter:
       types.append(type['type']['name'])
     typedetails = []
     for type in types:
-      response = requests.get(self.TypeURL+info['name'])
+      response = requests.get(self.TypeURL+type)
       if not 200<=response.status_code<300:
         print("Connection failed")
         return None
@@ -60,10 +60,18 @@ class PokemonGetter:
     return self.parseDamageRelations(typedetails)
     
   def parseDamageRelations(self, typedetails):
+    relations = {"double_damage_from":2,"half_damage_from":0.5,"no_damage_from":0}
     multipliers = {}
-    for type in typedetails:
-      # CONTINUE HERE
+    for detail in typedetails:
+      detail = detail['damage_relations']
+      for relation in relations:
+        for type in detail[relation]:
+          if multipliers.get(type['name']):
+            multipliers[type['name']]*=relations[relation]
+          else:
+            multipliers[type['name']]=relations[relation]
     
+    return {"damage_when_attacked":multipliers}
   
   def getEvolutionChainURL(self,pokemonName):
     response = requests.get(self.SpeciesURL+pokemonName)
@@ -100,9 +108,5 @@ class PokemonGetter:
           if evos['evolves_to']==[]:
             break
           evos = evos['evolves_to'][0]
+
       return {'evolutions':evolution}
-
-
-pkg = PokemonGetter()
-charmander = pkg.getPokemon('bulbasaur')
-charmander.printPokemon()
