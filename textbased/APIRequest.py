@@ -1,6 +1,6 @@
 import requests
-import json
 import pokemon
+import uuid
 
 class PokemonGetter:
   def __init__(self):
@@ -19,7 +19,8 @@ class PokemonGetter:
     pokemonInfo = self.getPokemonInfo(pokemonName)
     if pokemonInfo is None:
       return pokemonInfo
-    pkm = pokemon.Pokemon(pokemonInfo, lvl, EV)
+    pokemonInfo.update({"level":lvl, "EV":EV,"PokemonID":uuid.uuid4().hex})
+    pkm = pokemon.Pokemon(pokemonInfo)
     return pkm
     
   def getPokemonInfo(self, pokemonName: str):
@@ -33,11 +34,22 @@ class PokemonGetter:
       info = response.json()
       info.update(self.getPokemonEvolutions(info))
       info.update(self.getPokemonDamageRelations(info))
-      return info
+      cleanedInfo = self.cleanInfo(info)
+      return cleanedInfo
     else:
       print("No pokemon with that name or connection failed") 
       return None
     
+  def cleanInfo(self,info):
+    cleanedInfo = dict(info)
+    del cleanedInfo['abilities']
+    del cleanedInfo['forms']
+    del cleanedInfo['game_indices']
+    del cleanedInfo['held_items']
+    del cleanedInfo['moves']
+    
+    return cleanedInfo
+
   def getTypeURL(self,pokemonName):
     response = requests.get(self.SpeciesURL+pokemonName)
     if 200<= response.status_code < 300:
