@@ -7,7 +7,7 @@ ACTION_ACCEPT = "accept"
 ACTION_DECLINE = "decline"
 
 PACKETTYPE_PLAYER_ACTION = "player_action"
-PACKETTYPE_POLLING = "polling packet"
+PACKETTYPE_POLLING = "polling_packet"
 PACKETTYPE_HANDSHAKE = "handshake"
 PACKETTYPE_SERVER_RESPONSE = "server_response"
 

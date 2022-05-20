@@ -4,27 +4,19 @@ import pokemon
 
 class Battler:
     def __init__(self, teamOne: pokemon.PokeTeam, teamTwo: pokemon.PokeTeam):
-        self.teamOne = {pkm.name:pkm.hp for pkm in teamOne.pokemonList}
-        self.teamTwo = {pkm.name:pkm.hp for pkm in teamTwo.pokemonList}
+        self.__teamOne = teamOne
+        self.__teamTwo = teamTwo
+        self.teamOne = [[pkm.ID,pkm.name,pkm.hp] for pkm in teamOne.pokemonList]
+        self.teamTwo = [[pkm.ID,pkm.name,pkm.hp] for pkm in teamTwo.pokemonList]
         self.teamOneCurrent = None
         self.teamTwoCurrent = None
         
     def setTeamOneCurrent(self, pokemonID):
-      self.teamOneCurrent = pokemonID
+      self.teamOneCurrent = self.__teamOne.getPokemonFromID(pokemonID)
       
     def setTeamTwoCurrent(self, pokemonID):
-      self.teamTwoCurrent = pokemonID
-  
-    def startBattle(self):
-        print("Battle start!!")
-        self.isBattling = True
-
-        while(self.isBattling):
-            self.playRound()
-
-    def setState(self, state):
-        self.state = state
-
+      self.teamTwoCurrent = self.__teamTwo.getPokemonFromID(pokemonID)
+      
     def execute(self, P1Action, P2Action):
       print("-"*20)
       print(f"Player 1: {P1Action}")
@@ -33,8 +25,8 @@ class Battler:
       
     def getCurrentBattleInfo(self):
       info = {}
-      info.update(self.teamOne)
-      info.update(self.teamTwo)
-      info.update({"teamOneCurrent":self.teamOneCurrent})
-      info.update({"teamTwoCurrent":self.teamTwoCurrent})
+      info.update({"teamOne":self.teamOne})
+      info.update({"teamTwo":self.teamTwo})
+      info.update({"teamOneCurrent":self.teamOneCurrent.ID})
+      info.update({"teamTwoCurrent":self.teamTwoCurrent.ID})
       return info

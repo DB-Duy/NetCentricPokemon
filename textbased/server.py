@@ -109,13 +109,17 @@ class BattleHandler:
             print("Removed player 1")
             self.playerOne = None
             self.playerOneAddr = ""
+            self.playerOneStarter = ""
             self.playerNum -= 1
         if addr == self.playerTwoAddr:
             print("Removed player 2")
             self.playerTwo = None
             self.playerTwoAddr = ""
+            self.playerTwoStarter = ""
             self.playerNum -= 1
-            
+        if self.playerNum<2:
+          self.battler = None
+        
     def handlePacket(self, packet: Packet, addr):
         if packet.getPacketType() == PACKETTYPE_HANDSHAKE:
             return self.addPlayer(packet, addr)
@@ -125,9 +129,15 @@ class BattleHandler:
 
     def handlePlayerAction(self, packet: Packet, addr):      
       if addr == self.playerOneAddr:
-        self.playerOneAction = packet.getPacketDict()['info']
+        if packet.getPacketInfo() == ACTION_SWITCH:
+          self.playerOneAction = ACTION_SWITCH + "---" + packet.getPacketPayload()
+        else:
+          self.playerOneAction = packet.getPacketInfo()
       elif addr == self.playerTwoAddr:
-        self.playerTwoAction = packet.getPacketDict()['info']
+        if packet.getPacketInfo() == ACTION_SWITCH:
+          self.playerTwoAction = ACTION_SWITCH + "---" + packet.getPacketPayload()
+        else:
+          self.playerTwoAction = packet.getPacketInfo()
       if self.playerOneAction and self.playerTwoAction:
         self.executeAction(self.playerOneAction, self.playerTwoAction)
         self.updateState()
@@ -138,6 +148,7 @@ class BattleHandler:
         
     def executeAction(self, P1Action, P2Action):
       self.battler.execute(P1Action, P2Action)
+      self.clearActions()
       
     def getPacket(self, addr):
       self.updateState()
@@ -172,14 +183,20 @@ class BattleHandler:
       packet = Packet()
       packet.setPacketType(PACKETTYPE_SERVER_RESPONSE)
       packet.setPacketInfo(BATTLESTATE_AWAIT_OTHER_PLAYER_ACTION)
-      packet.setPacketPayload(self.battler.getCurrentBattleInfo())
+      info = self.battler.getCurrentBattleInfo()
+      info['teamOneID'] = self.playerOneAddr
+      info['teamTwoID'] = self.playerTwoAddr
+      packet.setPacketPayload(info)
       return packet
     
     def awaitActionPacket(self):
       packet = Packet()
       packet.setPacketType(PACKETTYPE_SERVER_RESPONSE)
       packet.setPacketInfo(BATTLESTATE_AWAIT_ACTION)
-      packet.setPacketPayload(self.battler.getCurrentBattleInfo())
+      info = self.battler.getCurrentBattleInfo()
+      info['teamOneID'] = self.playerOneAddr
+      info['teamTwoID'] = self.playerTwoAddr
+      packet.setPacketPayload(info)
       return packet
     
       

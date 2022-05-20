@@ -14,6 +14,7 @@ class Game:
         self.startingPokemonID = None
 
         self.gameState = {}
+        self.teamNum = None
 
     def __setPlayer(self):
         print("1.Load player or 2.create new player ?")
@@ -79,13 +80,44 @@ class Game:
                 packet.setPacketInfo(ACTION_ATTACK)
             if userInput == "2":
                 packet.setPacketInfo(ACTION_SWITCH)
-                packet.setPacketPayload(self.__switchPokemon())
+                payload = self.__switchPokemon()
+                if payload:
+                    packet.setPacketPayload(payload)
+                else:
+                    userInput = ""
+                    continue
             if userInput == "3":
                 packet.setPacketInfo(ACTION_SURRENDER)
         return packet
 
-    def __switchPokemon(self):
-        payload = {}
+    def __switchPokemon(self):        
+        team = None
+        current = None
+        if self.teamNum == 1:
+            team = self.gameState['teamOne']
+            current = self.gameState['teamOneCurrent']
+        else:
+            team = self.gameState['teamTwo']
+            current = self.gameState['teamTwoCurrent']
+            
+        validInputs = [str(idx+1) for idx,[ID,_,pkmHP] in enumerate(team) if pkmHP>0 and ID != current]
+        validInputs.append(str(int(validInputs[-1])+1))
+        userInput = ""
+        while userInput not in validInputs:
+            print("Pick pokemon to switch:")
+            for idx,[ID,pkmName, pkmHP] in enumerate(team):
+                    if pkmHP<=0:
+                        print(f"{idx+1}.{pkmName} - LOST",end="  ")
+                    elif ID == current:
+                        print(f"{idx+1}.{pkmName} - {pkmHP} HP - CURRENTLY BATTLING",end=" ")
+                    else:
+                        print(f"{idx+1}.{pkmName} - {pkmHP} HP - READY TO BATTLE",end=" ")
+            print(f"{validInputs[-1]}. Cancel switch")
+            userInput = input()
+        if userInput == validInputs[-1]:
+            return None
+        else:
+            return team[int(userInput)-1][0]
 
     def __sendHandshake(self):
         packet = network.Packet()
@@ -101,24 +133,35 @@ class Game:
         self.network.sendPacket(packet)
 
     def __startGameLoop(self):
-        last = ""
         while True:
             time.sleep(0.5)
-            self.network.sendPacket(self.__pollingPacket())
+            packet = None
             serverPacket = self.network.parseServerPacket()
             packetType = serverPacket.getPacketType()
             info = serverPacket.getPacketInfo()
-
-            if packetType == PACKETTYPE_SERVER_RESPONSE and info != last:
-                if info == BATTLESTATE_AWAIT_PLAYERS:
-                    print("Waiting for other player")
+            
+            if packetType == PACKETTYPE_SERVER_RESPONSE:
+                if info == BATTLESTATE_AWAIT_ACTION:
+                    self.gameState = serverPacket.getPacketPayload()
+                    packet = self.getActionPacket()
                 elif info == BATTLESTATE_AWAIT_OTHER_PLAYER_ACTION:
                     self.gameState = serverPacket.getPacketPayload()
                     print("Waiting for other player's action")
-                elif info == BATTLESTATE_AWAIT_ACTION:
-                    self.gameState = serverPacket.getPacketPayload()
-                    self.network.sendPacket(self.getActionPacket())
-                last = info
+                elif info == BATTLESTATE_AWAIT_PLAYERS:
+                    print("Waiting for other player")
+            
+            if packet is None:
+                packet = self.__pollingPacket()
+            if self.teamNum is None:
+                self.__setTeamNum()
+            self.network.sendPacket(packet)
+
+    def __setTeamNum(self):
+        if self.gameState:
+            if self.network.id == self.gameState['teamOneID']:
+                self.teamNum = 1
+            elif self.network.id == self.gameState['teamTwoID']:
+                self.teamNum = 2
 
     def __pollingPacket(self):
         packet = network.Packet()
