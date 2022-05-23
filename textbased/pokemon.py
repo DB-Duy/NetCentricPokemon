@@ -27,6 +27,7 @@ class Pokemon:
         self.base_experience = pokemonInfo['base_experience']
         self.name = pokemonInfo['name']
         self.evolutions = pokemonInfo['evolutions']
+        self.whenAttacked = pokemonInfo['damage_when_attacked']
         for type in pokemonInfo['types']:
             self.type.append(type['type']['name'])
         self.spriteURL = pokemonInfo['sprites']['front_default']
@@ -66,6 +67,9 @@ class Pokemon:
         self.__updateStats()
         self.updateInfo()
         self.EXPToLevelUp = self.base_experience * (2**self.level)
+        
+    def getEXPReward(self):
+        return self.EXPToLevelUp
 
     def __updateStats(self):
         mult = (1+self.EV)**self.level
@@ -199,4 +203,9 @@ class PokeTeam:
     
     def printAllPokemon(self):
         for pkm in self.pokemonList:
+            pkm.printPokemon()
+            
+    def printBattlePokemon(self):
+        for pkmID in self.battleList:
+            pkm = self.getPokemonFromID(pkmID)
             pkm.printPokemon()

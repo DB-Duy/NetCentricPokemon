@@ -140,7 +140,7 @@ class BattleHandler:
           self.playerTwoAction = packet.getPacketInfo()
       if self.playerOneAction and self.playerTwoAction:
         self.executeAction(self.playerOneAction, self.playerTwoAction)
-        self.updateState()
+      self.updateState()
         
     def clearActions(self):
       self.playerTwoAction = None
@@ -161,9 +161,14 @@ class BattleHandler:
           return self.awaitActionPacket()
         else:
           return self.awaitOtherPacket()
+      else:
+        return self.resultPacket()
       
     def updateState(self):
-      if self.playerOneAddr == "" or self.playerTwoAddr == "":
+      if self.battler:
+        if self.battler.winner:
+          self.state = BATTLESTATE_FINISHED
+      elif self.playerOneAddr == "" or self.playerTwoAddr == "":
         self.state = BATTLESTATE_AWAIT_PLAYERS
       elif self.playerOneAction is None or self.playerTwoAction is None:
         if self.battler is None:
@@ -172,6 +177,16 @@ class BattleHandler:
           self.battler.setTeamTwoCurrent(self.playerTwoStarter)
         self.state = BATTLESTATE_AWAIT_ACTION
 
+    def resultPacket(self):
+      packet = Packet()
+      packet.setPacketType(PACKETTYPE_SERVER_RESPONSE)
+      result = self.battler.getCurrentBattleInfo()
+      if result['winner'] == "teamOne":
+        packet.setPacketInfo(BATTLESTATE_P1_VICTORY)
+      else:
+        packet.setPacketInfo(BATTLESTATE_P2_VICTORY)
+      packet.setPacketPayload(result)
+      return packet
       
     def awaitPlayersPacket(self):
       packet = Packet()

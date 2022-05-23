@@ -69,6 +69,8 @@ class Game:
                 print("Invalid input")
 
     def getActionPacket(self):
+        if self.hasToSwitch():
+            return self.__forcedSwitchPaket()
         validInputs = ["1", "2", "3"]
         packet = network.Packet()
         packet.setPacketType(PACKETTYPE_PLAYER_ACTION)
@@ -86,14 +88,41 @@ class Game:
                 else:
                     userInput = ""
                     continue
+                
             if userInput == "3":
                 packet.setPacketInfo(ACTION_SURRENDER)
+        return packet
+    
+    def hasToSwitch(self):
+        team = None
+        current = None
+        if self.teamNum == 'teamOne':
+            team = self.gameState['teamOne']
+            current = self.gameState['teamOneCurrent']
+        else:
+            team = self.gameState['teamTwo']
+            current = self.gameState['teamTwoCurrent']
+        
+        for [ID,_,HP] in team:
+            if ID == current and HP <= 0:
+                return True
+        return False
+
+    def __forcedSwitchPaket(self):
+        packet = network.Packet()
+        packet.setPacketType(PACKETTYPE_PLAYER_ACTION)
+        packet.setPacketInfo(ACTION_SWITCH)
+        payload = None
+        while payload is None:
+            payload = self.__switchPokemon()
+        packet.setPacketPayload(payload)
         return packet
 
     def __switchPokemon(self):        
         team = None
         current = None
-        if self.teamNum == 1:
+        print(f"Team num: {self.teamNum}")
+        if self.teamNum == 'teamOne':
             team = self.gameState['teamOne']
             current = self.gameState['teamOneCurrent']
         else:
@@ -141,11 +170,14 @@ class Game:
             info = serverPacket.getPacketInfo()
             
             if packetType == PACKETTYPE_SERVER_RESPONSE:
-                if info == BATTLESTATE_AWAIT_ACTION:
-                    self.gameState = serverPacket.getPacketPayload()
+                if info == BATTLESTATE_P1_VICTORY or info == BATTLESTATE_P2_VICTORY:
+                    self.endGame(serverPacket)
+                    break
+                elif info == BATTLESTATE_AWAIT_ACTION:
+                    self.setGameState(serverPacket.getPacketPayload())
                     packet = self.getActionPacket()
                 elif info == BATTLESTATE_AWAIT_OTHER_PLAYER_ACTION:
-                    self.gameState = serverPacket.getPacketPayload()
+                    self.setGameState(serverPacket.getPacketPayload())
                     print("Waiting for other player's action")
                 elif info == BATTLESTATE_AWAIT_PLAYERS:
                     print("Waiting for other player")
@@ -155,13 +187,28 @@ class Game:
             if self.teamNum is None:
                 self.__setTeamNum()
             self.network.sendPacket(packet)
-
+            
+    def endGame(self,resultPacket: network.Packet):
+        result = resultPacket.getPacketPayload()
+        if result['winner'] == self.teamNum:
+            print("YOU WIN")
+            for pkmID in self.player.team.battleList:
+                self.player.team.getPokemonFromID(pkmID).giveExp(result['expRewards'])
+            self.player.savePlayer()
+        else:
+            print("YOU LOST")
+            
+    def setGameState(self,state):
+        self.gameState = state
+        if self.teamNum is None:
+            self.__setTeamNum()
+    
     def __setTeamNum(self):
         if self.gameState:
-            if self.network.id == self.gameState['teamOneID']:
-                self.teamNum = 1
-            elif self.network.id == self.gameState['teamTwoID']:
-                self.teamNum = 2
+            if self.network.id == str(tuple(self.gameState['teamOneID'])):
+                self.teamNum = 'teamOne'
+            elif self.network.id == str(tuple(self.gameState['teamTwoID'])):
+                self.teamNum = 'teamTwo'
 
     def __pollingPacket(self):
         packet = network.Packet()

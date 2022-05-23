@@ -29,6 +29,9 @@ class Player:
     team = pokemon.PokeTeam()
     team.loadPokemons(data)
     player = Player(data["name"], team)
+    print(f"Loading player: {player.name}")
+    print("BATTLE TEAM:")
+    player.team.printBattlePokemon()
     return player
     
   def printPlayer(self):

@@ -35,7 +35,7 @@ class Network:
         self.server = serverIP
         self.port = 9999
         self.addr = (self.server, self.port)
-        self.id=list(self.connect())
+        self.id=self.connect()
         
     def connect(self):
         try:
