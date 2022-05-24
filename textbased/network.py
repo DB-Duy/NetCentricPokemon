@@ -1,6 +1,5 @@
 import socket
 import json
-import struct
 
 from CONSTANTS import *
 
@@ -55,6 +54,5 @@ class Network:
     def parseServerPacket(self):
       serverRes = self.client.recv(2048*64)
       data = serverRes.decode()
-      print(data)
       data = json.loads(serverRes)
       return Packet(data)

@@ -162,13 +162,14 @@ class Game:
         self.network.sendPacket(packet)
 
     def __startGameLoop(self):
+        ticks = 0
         while True:
+            ticks+=1
             time.sleep(0.5)
             packet = None
             serverPacket = self.network.parseServerPacket()
             packetType = serverPacket.getPacketType()
             info = serverPacket.getPacketInfo()
-            
             if packetType == PACKETTYPE_SERVER_RESPONSE:
                 if info == BATTLESTATE_P1_VICTORY or info == BATTLESTATE_P2_VICTORY:
                     self.endGame(serverPacket)
