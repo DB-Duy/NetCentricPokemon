@@ -1,8 +1,9 @@
 import socket
 import _thread
 import pickle
+import time
 
-server = "172.25.35.107"
+server = socket.gethostbyname(socket.gethostname())
 port = 5555
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 Players = {}
@@ -10,10 +11,10 @@ Players = {}
 try:
   sock.bind((server,port))
 except socket.error as e:
-  print(str(e))
+  print("Binding error ",str(e))
   
 sock.listen()
-print("Sever listening")
+print("Server listening")
 
 def newClient(conn,addr):
   reply = {}
@@ -23,12 +24,15 @@ def newClient(conn,addr):
   except:
     return
   while True:
+    time.sleep(0.5)
     try: 
       data = conn.recv(2048*4)
+      print("Client data",data)
       clientPos = pickle.loads(data)
       ((id, pos),) = clientPos.items()
       Players[id]=pos
       reply ={k:v for (k,v) in Players.items() if k!=id}
+      print("Reply: ",reply)
       conn.sendall(pickle.dumps(reply))
     except:
       break
