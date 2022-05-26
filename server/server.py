@@ -3,42 +3,35 @@ import _thread
 import pickle
 import time
 
+from ThreadClientPokeCat import *
+# setup sockets
 server = socket.gethostbyname(socket.gethostname())
 port = 5555
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-Players = {}
 
+# set constants
+
+#Dynamic variables
+Players = {}
+Pokemons = {}
+connections = 0
+
+# start server 
 try:
   sock.bind((server,port))
 except socket.error as e:
-  print("Binding error ",str(e))
+  print("[SERVER] Binding error: ",str(e))
+  quit()
   
 sock.listen()
-print("Server listening")
+print(f"[SERVER] Server listening with local ip {server} port {port} ")
 
-def newClient(conn,addr):
-  reply = {}
-  try:
-    print(f"Sending ID: {addr}")
-    conn.sendall(str(addr).encode('utf-8'))
-  except:
-    return
-  while True:
-    time.sleep(0.5)
-    try: 
-      data = conn.recv(2048*4)
-      print("Client data",data)
-      clientPos = pickle.loads(data)
-      ((id, pos),) = clientPos.items()
-      Players[id]=pos
-      reply ={k:v for (k,v) in Players.items() if k!=id}
-      print("Reply: ",reply)
-      conn.sendall(pickle.dumps(reply))
-    except:
-      break
-  conn.close()
-  
+# MAIN LOOP   
 while True:
+  time.sleep(0.5)
   conn, addr = sock.accept()
-  print(f"Client connected: {addr}")
-  _thread.start_new_thread(newClient, (conn, addr))
+  print(f"[CONNECTION] Client connected: {addr}")
+  _thread.start_new_thread(thread_client_pokecatch, (Players,Pokemons,conn, addr))
+  connections +=1
+
+## End game

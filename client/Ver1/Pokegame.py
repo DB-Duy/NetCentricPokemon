@@ -51,16 +51,16 @@ class Game:
 
     def spawnPlayer(self, x=-1, y=-1):
         """Spawn player, if no positional argument is passed or if invalid position argument, spawn randomly in valid cell
-
         Args:
             x (int, optional): Spawn coordiate x. Defaults to -1.
             y (int, optional): Spawn coordinate y. Defaults to -1.
         """
-        self.player = Player(self, 0, 0,self.network.id,'f')
-        while self.player.collides(x,y) or (x==-1 and y==-1):
+        player = Player(self, 0, 0,self.network.id,'f')
+        while player.collides(x,y) or (x==-1 and y==-1):
             (x,y) = (random.randrange(1,MAP_WIDTH-1),random.randrange(1,MAP_HEIGHT-1))
-        self.player.x = x
-        self.player.y = y
+        player.x = x 
+        player.y = y
+        self.player = player
         print(f"Player spawned at: {(x,y)}")
 
     def run(self):
@@ -86,6 +86,7 @@ class Game:
         serverRes = self.network.sendPlayerState(self.player)
         if serverRes:
             serverRes = pickle.loads(serverRes)
+            print("[CLIENT] polling server ",serverRes)
             for player in self.players:
                 for id, pos in serverRes.items():
                     if player.id == id:
