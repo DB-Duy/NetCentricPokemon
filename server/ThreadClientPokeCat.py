@@ -19,6 +19,8 @@ def thread_client_pokecatch(Players,Pokemons, conn,addr):
   while True:
     try: 
       data = conn.recv(2048*4)
+      if not data:
+        break
       clientPos = pickle.loads(data)
       print(f"[CLIENT {conn_id}] Position: {clientPos}")
       ((id, pos),) = clientPos.items()
@@ -29,8 +31,9 @@ def thread_client_pokecatch(Players,Pokemons, conn,addr):
     except Exception as e:
       print(e)
       break
-    time.sleep(1)
+    time.sleep(0.001)
   conn.close()
   
 ## When user disconnects
   print(f"[DISCONNECT] Client {conn_id} is disconnected")
+  del Players[id]

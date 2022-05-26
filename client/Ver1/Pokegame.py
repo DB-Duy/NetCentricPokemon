@@ -86,14 +86,14 @@ class Game:
         serverRes = self.network.sendPlayerState(self.player)
         if serverRes:
             serverRes = pickle.loads(serverRes)
-            print("[CLIENT] polling server ",serverRes)
+            # print("[CLIENT] polling server ",serverRes)
             for player in self.players:
                 for id, pos in serverRes.items():
                     if player.id == id:
                         player.x = pos[0]
                         player.y = pos[1]
-                    else:
-                        Player(self,pos[0],pos[1],id)
+                    # else:
+                    #     Player(self,pos[0],pos[1],id)
         
     def draw_grid(self):
         for x in range(0, LEFTWIDTH, TILESIZE):
@@ -106,6 +106,9 @@ class Game:
         for sprite in self.all_sprites:
           if self.camera.inCamera(sprite.rect):
             self.screen.blit(sprite.image, self.camera.apply(sprite))
+        # for player in self.players:
+        #     if self.camera.inCamera(player.rect):
+        #         self.screen.blit(player.image, self.camera.apply(player))
         #self.draw_grid()
         pg.display.flip()
 
