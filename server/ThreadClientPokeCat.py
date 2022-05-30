@@ -1,6 +1,12 @@
+from asyncio.windows_events import NULL
 import pickle
 import time
-def thread_client_pokecatch(Players,Pokemons, conn,addr):
+
+from PokeCatchHelper import catch_pokemon
+posMsg =""
+replyMsg =""
+conn_id = NULL
+def thread_client_pokecatch(Players,Pokemons,Pokemons_packet, conn,addr):
   """ start a new thread for new client connected to pokecatch's server
 
   Args:
@@ -9,8 +15,11 @@ def thread_client_pokecatch(Players,Pokemons, conn,addr):
       conn (socket object): current client socket
       addr (address info): current client address info
   """
-  conn_id = addr[1]
+  global conn_id 
+  conn_id = addr
   reply = {}
+  ## Remove posMsg and replyMsg for better perfromance 
+  global posMsg,replyMsg
   try:
     print(f"Sending ID: {addr}")
     conn.sendall(str(addr).encode('utf-8'))
@@ -21,13 +30,26 @@ def thread_client_pokecatch(Players,Pokemons, conn,addr):
       data = conn.recv(2048*4)
       if not data:
         break
-      clientPos = pickle.loads(data)
-      print(f"[CLIENT {conn_id}] Position: {clientPos}")
-      ((id, pos),) = clientPos.items()
+      clientData = pickle.loads(data)
+      posPrintOut =f"[CLIENT {conn_id}] Position: {clientData}"
+      if posMsg != posPrintOut:
+        print(posPrintOut)
+        posMsg = posPrintOut
+      ((id, pos),) = clientData.items()
       Players[id]=pos
+      
+      if pos[3].split(" ")[0] == 'CATCH':
+        pokemon = catch_pokemon(Pokemons,Pokemons_packet,int(pos[3].split(" ")[1]))
+        conn.sendall(pickle.dumps(pokemon))
+        continue
       reply ={k:v for (k,v) in Players.items() if k!=id}
-      print(f"[CLIENT {conn_id}] Reply: {reply}")
+      replyPrintOut = f"[CLIENT {conn_id}] Reply: {reply}"
+      
+      if replyMsg != replyPrintOut:
+        print(replyPrintOut)
+        replyMsg = replyPrintOut
       conn.sendall(pickle.dumps(reply))
+      conn.sendall(pickle.dumps(Pokemons_packet))
     except Exception as e:
       print(e)
       break
@@ -36,4 +58,4 @@ def thread_client_pokecatch(Players,Pokemons, conn,addr):
   
 ## When user disconnects
   print(f"[DISCONNECT] Client {conn_id} is disconnected")
-  del Players[id]
+  del Players[str(conn_id)]

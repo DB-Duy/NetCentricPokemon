@@ -1,18 +1,23 @@
+import random
 import pygame as pg
 from settings import *
-
+import io
+from urllib.request import urlopen
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, game, x, y,id, type='m'):
+    def __init__(self, game, x, y,id,face="DOWN",action="MOVE", type='m'):
         """Creates and inserts player into game
-
+    
         Args:
             game (Game): Game to insert player into
             x (int): x position
             y (int): y position
+            face (str,optional): to change sprite image 
+            action (str, optional): player actions ( MOVE, CATCH)
             type (str, optional): Sprite type, 'm' is male 'f' is female. Defaults to 'm'.
             id: playerID
         """
+   
         self.id = id
         self.groups = [game.all_sprites, game.players]
         super().__init__(self.groups)
@@ -27,10 +32,13 @@ class Player(pg.sprite.Sprite):
         self.direction = pg.math.Vector2()
         self.x = x
         self.y = y
-        self.facing = "DOWN"
+        self.facing = face
+        self.action = action
         self.unmoved = 0
         self.unmoved_frames = 0
-
+        
+        ## Player pokemon inventory
+        self.poketeam = []
     def input(self):
         keys = pg.key.get_pressed()
         if keys[pg.K_UP] or keys[pg.K_w]:
@@ -48,10 +56,13 @@ class Player(pg.sprite.Sprite):
             if self.unmoved == 0:
                 self.direction.x = -1
                 self.facing = "LEFT"
+
         elif keys[pg.K_RIGHT] or keys[pg.K_d]:
             if self.unmoved == 0:
                 self.direction.x = 1
                 self.facing = "RIGHT"
+        elif keys[pg.K_SPACE]:
+            self.action = f"CATCH {random.randint(1,50)}"
         else:
             self.direction.x = 0
 
@@ -59,16 +70,16 @@ class Player(pg.sprite.Sprite):
         self.image.fill((0, 0, 0, 0))
         if self.facing == "UP":
             self.image.blit(self.sheet, (0, 0), (self.unmoved*TILESIZE,
-                            TILESIZE*3, int(TILESIZE*IMG_SCALE), int(TILESIZE*IMG_SCALE)))
+                            TILESIZE * 3, int(TILESIZE*IMG_SCALE), int(TILESIZE*IMG_SCALE)))
         elif self.facing == "DOWN":
             self.image.blit(self.sheet, (0, 0), (self.unmoved*TILESIZE,
-                            0, int(TILESIZE*IMG_SCALE), int(TILESIZE*IMG_SCALE)))
+                            TILESIZE * 0, int(TILESIZE*IMG_SCALE), int(TILESIZE*IMG_SCALE)))
         elif self.facing == "LEFT":
             self.image.blit(self.sheet, (0, 0), (self.unmoved*TILESIZE,
-                            TILESIZE, int(TILESIZE*IMG_SCALE), int(TILESIZE*IMG_SCALE)))
+                            TILESIZE * 1, int(TILESIZE*IMG_SCALE), int(TILESIZE*IMG_SCALE)))
         else:
             self.image.blit(self.sheet, (0, 0), (self.unmoved*TILESIZE,
-                            TILESIZE*2, int(TILESIZE*IMG_SCALE), int(TILESIZE*IMG_SCALE)))
+                            TILESIZE * 2, int(TILESIZE*IMG_SCALE), int(TILESIZE*IMG_SCALE)))
 
     def move(self):
         if self.unmoved_frames <= 0 and self.direction:
@@ -102,6 +113,12 @@ class Player(pg.sprite.Sprite):
         self.move()
         self.drawSprite()
 
+class OtherPlayer(Player):
+    def __init__(self, game, x, y,id,face="DOWN",action="MOVE", type='m'):
+        super().__init__(game, x, y,id,face,action, type)
+    
+
+
 
 class Wall(pg.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -110,6 +127,26 @@ class Wall(pg.sprite.Sprite):
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE)).convert_alpha()
         self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+class PokemonDisplay(pg.sprite.Sprite):
+    def __init__(self, game,ID,displayInfo):
+        self.ID = ID
+        url, x , y = displayInfo
+       
+        # create a file object (stream)
+        # image_file = io.BytesIO(image_str)
+        # image_str = urlopen(url).read()
+        self.groups = game.all_sprites
+        super().__init__(self.groups)
+        self.game = game
+        # self.image = pg.image.load(image_file)
+        self.image = pg.Surface((TILESIZE, TILESIZE)).convert_alpha()
+        self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y

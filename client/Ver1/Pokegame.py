@@ -8,7 +8,7 @@ from settings import *
 from Entities import *
 from Map import *
 from network import Network
-
+import random
 class Game:
     def __init__(self):
         pg.init()
@@ -40,10 +40,12 @@ class Game:
         self.all_sprites = pg.sprite.Group()
         self.players = pg.sprite.Group()
         self.walls = pg.sprite.Group()
+        self.pokemons = pg.sprite.Group()
         for y, row in enumerate(self.map.data):
             for x, cell in enumerate(row):
                 if cell == WALL:
-                    Wall(self, x, y)
+                    # Wall(self, x, y)
+                    self.pokemons.add(PokemonDisplay(self,random.randint(0,50),('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/31.png',x,y)))
                 elif cell == EMPTYCELL:
                     Floor(self,x,y)
         self.spawnPlayer()
@@ -55,11 +57,10 @@ class Game:
             x (int, optional): Spawn coordiate x. Defaults to -1.
             y (int, optional): Spawn coordinate y. Defaults to -1.
         """
-        player = Player(self, 0, 0,self.network.id,'f')
-        while player.collides(x,y) or (x==-1 and y==-1):
+        
+        while self.collides(x,y) or (x==-1 and y==-1):
             (x,y) = (random.randrange(1,MAP_WIDTH-1),random.randrange(1,MAP_HEIGHT-1))
-        player.x = x 
-        player.y = y
+        player = Player(self,x,y,id=self.network.id)
         self.player = player
         print(f"Player spawned at: {(x,y)}")
 
@@ -79,22 +80,58 @@ class Game:
     def update(self):
         # update portion of the game loop
         self.all_sprites.update()
+        self.pokemons.update()
         self.camera.update(self.player)
         self.pollServer()
-        
+
+    def collides(self, x, y):
+        collidables = pg.sprite.Group()
+        collidables.add(self.walls)
+        collidables.add(self.players)
+        for entity in collidables:
+            if entity.x == x and entity.y == y:
+                return True
+        return False
     def pollServer(self):
         serverRes = self.network.sendPlayerState(self.player)
         if serverRes:
             serverRes = pickle.loads(serverRes)
-            # print("[CLIENT] polling server ",serverRes)
+            ##  If Pokemon wave packet is replied from server:
+            if "isPokemonPacket" in serverRes.keys():
+                print("Pokemon packet recieved ")
+                return 
+            
+            ## If other players' info is replied from server:
+            resList = serverRes.keys()
+            curPlayersIdList = [x.id for x in self.players.sprites()]
+            print("[CLIENT] polling server ",serverRes)
+            
+            ## Check if server send caught pokemon
+            if  "ID" in serverRes.keys():
+                print("Successfully catch ",serverRes["name"])
+                self.player.action = "MOVE"
+                self.player.poketeam.append(serverRes)
+                return
+            
+            ## Add new player
+            for res in serverRes.keys():
+                if res not in curPlayersIdList:
+                    self.players.add(OtherPlayer(self,x=serverRes[res][0],y=serverRes[res][1],id=res,face=serverRes[res][2], action=serverRes[res][3],type='f')) 
+            
+            ## Update player position 
             for player in self.players:
+                ## Remove disconnected players
+                if player.id not in resList:
+                    self.players.remove(player)
+                else:
+                    curPlayersIdList.append(player)
                 for id, pos in serverRes.items():
                     if player.id == id:
                         player.x = pos[0]
                         player.y = pos[1]
-                    # else:
-                    #     Player(self,pos[0],pos[1],id)
-        
+                        player.face = pos[2]
+                        player.action = pos[3]
+            # print("Current player",self.players.sprites())
     def draw_grid(self):
         for x in range(0, LEFTWIDTH, TILESIZE):
             pg.draw.line(self.screen, LIGHTGREY, (x, 0), (x, HEIGHT))
@@ -106,9 +143,6 @@ class Game:
         for sprite in self.all_sprites:
           if self.camera.inCamera(sprite.rect):
             self.screen.blit(sprite.image, self.camera.apply(sprite))
-        # for player in self.players:
-        #     if self.camera.inCamera(player.rect):
-        #         self.screen.blit(player.image, self.camera.apply(player))
         #self.draw_grid()
         pg.display.flip()
 
@@ -135,3 +169,20 @@ while True:
     g.new()
     g.run()
     g.show_go_screen()
+
+
+# g = Game()
+# g.new()
+# player = Player(g, 10,12,11,'m')
+# player2 = Player(g, 11,12,111,'m')
+# player3 = Player(g, 12,12,112,'m')
+
+# gr = pg.sprite.Group()
+# gr.add(player)
+# gr.add(player2)
+# gr.add(player3)
+# for sprite in gr.sprites():
+#     sprite.id = 11212
+# gr.remove(player)
+# for sprite in gr.sprites():
+#     print(sprite.id)

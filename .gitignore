@@ -128,3 +128,20 @@ dmypy.json
 # Pyre type checker
 .pyre/
 tempCode.py
+server/fetch_data/full pokemon basic data/pokemon_103to153.json
+server/fetch_data/full pokemon basic data/pokemon_154to204.json
+server/fetch_data/full pokemon basic data/pokemon_1to51.json
+server/fetch_data/full pokemon basic data/pokemon_205to255.json
+server/fetch_data/full pokemon basic data/pokemon_256to306.json
+server/fetch_data/full pokemon basic data/pokemon_307to357.json
+server/fetch_data/full pokemon basic data/pokemon_358to408.json
+server/fetch_data/full pokemon basic data/pokemon_409to459.json
+server/fetch_data/full pokemon basic data/pokemon_460to510.json
+server/fetch_data/full pokemon basic data/pokemon_511to561.json
+server/fetch_data/full pokemon basic data/pokemon_52to102.json
+server/fetch_data/full pokemon basic data/pokemon_562to612.json
+server/fetch_data/full pokemon basic data/pokemon_613to663.json
+server/fetch_data/full pokemon basic data/pokemon_664to714.json
+server/fetch_data/full pokemon basic data/pokemon_715to765.json
+server/fetch_data/full pokemon basic data/pokemon_766to800.json
+server/fetch_data/full pokemon basic data/pokemon_basic_info.json
