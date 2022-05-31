@@ -1,7 +1,7 @@
 import pokeGame
 from CONSTANTS import *
 import APIRequest
-
-
-g = pokeGame.Game()
-g.joinServer(SERVER_IP)
+import player
+import pokeGame
+game = pokeGame.Game()
+game.joinServer(SERVER_IP)

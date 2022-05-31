@@ -44,8 +44,8 @@ class Game:
         for y, row in enumerate(self.map.data):
             for x, cell in enumerate(row):
                 if cell == WALL:
-                    # Wall(self, x, y)
-                    self.pokemons.add(PokemonDisplay(self,random.randint(0,50),('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/31.png',x,y)))
+                    Wall(self, x, y)
+                    # self.pokemons.add(PokemonDisplay(self,random.randint(0,50),('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/31.png',x,y)))
                 elif cell == EMPTYCELL:
                     Floor(self,x,y)
         self.spawnPlayer()

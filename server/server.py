@@ -12,7 +12,7 @@ from ThreadClientPokeCat import thread_client_pokecatch
 
 
 # setup sockets
-server = socket.gethostbyname(socket.gethostname())
+server = '10.249.186.16'
 port = 5555
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
